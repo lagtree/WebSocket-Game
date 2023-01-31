@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        let clientId = null;
+
+        let ws = new WebSocket("ws://localhost:9090")
+
+        ws.onmessage = message => {
+            const reponse = JSON.parse(message.data);
+
+            if (response.method == "connect"){
+                clientId = reponse.clientId
+                console.log("game successfully created")
+            }
+        }
+
+    </script>
+</body>
+</html>
