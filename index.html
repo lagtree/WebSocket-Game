@@ -1,25 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <script>
-        let clientId = null;
+<html>
+    <head>
+        <title>Anagrams</title>
 
-        let ws = new WebSocket("ws://localhost:9090")
-
-        ws.onmessage = message => {
-            const reponse = JSON.parse(message.data);
-
-            if (response.method == "connect"){
-                clientId = reponse.clientId
-                console.log("game successfully created")
+        <style>
+            body {
+               margin: 0;
+               overflow: hidden;
             }
-        }
+        </style>
+        <script src="https://cdn.jsdelivr.net/npm/p5@1.5.0/lib/p5.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.5.16/addons/p5.sound.js"></script>
+        <script src="anagrams.js"></script>
+    </head>
+    <body>
+    </body>
 
-    </script>
-</body>
 </html>
