@@ -5,7 +5,7 @@ import { WebSocketServer } from 'ws';
 
 import fetch from "node-fetch";
 
-const wss = new WebSocketServer({ port: 8080 });
+const wss = new WebSocketServer({ port: 9091 });
 
 const clients = new Set();
 
@@ -23,7 +23,9 @@ wss.on('connection', (ws) => {
 
   ws.on('message', (message) => {
    // process the data received from the client
-    message = JSON.parse(message)
+    const paresedData = message.toString().split(" ");
+    console.log(paresedData);
+    // message = JSON.parse(message)
     let processedData = processData(message.toString());
     console.log("message: " + message);
     console.log("debug: " + processedData);

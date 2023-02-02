@@ -7,24 +7,26 @@
     <input type="text" id="message">
     <input type="text" id="name">
     <button id="send">Send</button>
+    <button id="addName">Submit</button>
     <div id="output"></div>
 
     <script>
-      const socket = new WebSocket('ws://localhost:8080');
+      const socket = new WebSocket('ws://localhost:9091');
       const messageInput = document.getElementById('message');
       const sendButton = document.getElementById('send');
       const output = document.getElementById('output');
       const nameInput = document.getElementById('name');
+      const nameButton = document.getElementById('addName');
 
       sendButton.addEventListener('click', () => {
-        const payload = {
-            "message": messageInput.value,
-            "name": nameInput.value
-        }
-
-        socket.send(JSON.stringify(payload));
+        socket.send("data " + messageInput.value);
         messageInput.value = '';
       });
+
+      nameButton.addEventListener('click', () => {
+        socket.send("name " + nameButton.value);
+        nameButton.value = '';
+      })
 
       socket.onmessage = (event) => {
         output.innerHTML += `<p>Received: ${event.data}</p>`;
