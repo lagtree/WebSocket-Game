@@ -23,9 +23,11 @@ wss.on('connection', (ws) => {
 
   ws.on('message', (message) => {
    // process the data received from the client
+    message = JSON.parse(message)
     let processedData = processData(message.toString());
-    console.log("message: " + message.toString());
+    console.log("message: " + message);
     console.log("debug: " + processedData);
+    console.log("clients: " + clients.size)
 
  
     // send the processed data back to all clients

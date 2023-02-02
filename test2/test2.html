@@ -5,6 +5,7 @@
   </head>
   <body>
     <input type="text" id="message">
+    <input type="text" id="name">
     <button id="send">Send</button>
     <div id="output"></div>
 
@@ -13,9 +14,15 @@
       const messageInput = document.getElementById('message');
       const sendButton = document.getElementById('send');
       const output = document.getElementById('output');
+      const nameInput = document.getElementById('name');
 
       sendButton.addEventListener('click', () => {
-        socket.send(messageInput.value);
+        const payload = {
+            "message": messageInput.value,
+            "name": nameInput.value
+        }
+
+        socket.send(JSON.stringify(payload));
         messageInput.value = '';
       });
 
