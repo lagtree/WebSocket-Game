@@ -23,9 +23,9 @@ wss.on('connection', (ws) => {
 
   ws.on('message', (message) => {
    // process the data received from the client
-    firstWord();
-    let processedData = processData(message);
-    console.log("debug: " + processedData)
+    let processedData = processData(message.toString());
+    console.log("message: " + message.toString());
+    console.log("debug: " + processedData);
 
  
     // send the processed data back to all clients
@@ -93,13 +93,14 @@ function firstWord() {
 
 function processData(word) {
     if(answers != null){
+        var pointsOut = 0
         for(let k = 0; k < answers.length; k++) {
             if (word == answers[k]) {
-                let pointsOut = word.length * 100;
-            }else {
-                let pointsOut = 0;
+                pointsOut = word.length * 100;
             }
         }
     }
     return pointsOut;
 }
+
+firstWord();
