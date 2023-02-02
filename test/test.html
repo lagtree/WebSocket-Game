@@ -7,6 +7,7 @@
         <h1>Real Time Updates</h1>
         <pre id="messages" style="height: 400px; overflow: scroll"></pre>
         <input type="text" id="messageBox" placeholder="Type here..." style="display:block; width: 100%; margin-bottom: 10px; padding: 10px;">
+        <input type="text" id="nameBox" placeholder="name" style="display:block; width: 100%; margin-bottom: 10px; padding: 10px;">
         <button id="send" title="Send Message!" style="width: 100%; height: 30px;">Send</button>
 
         <script>
@@ -15,6 +16,7 @@
             const sendBtn = document.querySelector('#send');
             const messages = document.querySelector('#messages');
             const messageBox = document.querySelector('#messageBox');
+            const nameBox = document.querySelector('#nameBox');
 
             let ws;
 
@@ -22,12 +24,12 @@
                 messages.textContent += '\n\n' + message;
                 messages.scrollTop = messages.scrollHeight;
                 messageBox.value = '';
+                nameBox.value = '';
             }
 
             function init() {
                 if (ws) {
-                    ws.onerror = ws.onopen = ws.onclose = null;
-                    
+                    ws.onerror = ws.onopen = ws.onclose = null;                    
                 }
             }
 
@@ -46,7 +48,12 @@
                     return;
                 }
 
-                ws.send(messageBox.value);
+                const payload = {
+                    "data1": messageBox.data,
+                    "name": nameBox.data
+                }
+
+                ws.send(JSON.stringify(payload));
                 showMessage(messageBox.value);
             }
 
