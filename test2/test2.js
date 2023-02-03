@@ -21,19 +21,20 @@ var openedText = await response.text(); // <-- changed
 var words = openedText.split(/\r\n|\n/);
 
 
-let words = new Array(3);
+let roundWords = new Array(3);
 let numWords = [10, 20, 20];
 let timings = [20, 40, 40];
 let userWords = [];
 let possibleWords = [];
 
-for (let i = 0; i < words.length; i++) {
-    words[i] = new Array(numWords[i]);
+for (let i = 0; i < roundWords.length; i++) {
+    roundWords[i] = new Array(numWords[i]);
 }
 
 wss.on('connection', (ws) => {
     // ws.uid = clients.length
     clients.push(ws);
+    userWords.push([]);
 
   ws.on('message', (message) => {
     
@@ -47,7 +48,7 @@ wss.on('connection', (ws) => {
                     const namePacketReturn = { type: 'name', data: incPacket.data}
                     clients[i].send(JSON.stringify(namePacketReturn));
                 }
-            }else {
+            } else {
                 let nameUsed = false;
                 for(let i = 0; i < names.length; i++) {
                     if (names[i] == incPacket.data) {
@@ -62,15 +63,45 @@ wss.on('connection', (ws) => {
                         const namePacketReturn = { type: 'name', data: incPacket.data}
                         clients[i].send(JSON.stringify(namePacketReturn));
                     }
-                }else{
+                } else {
                     const errorPacket = { type : 'error', data: "Can't do that! (name already in use)" }
-                    clients[names.length].send(JSON.stringify(errorPacket));
+                    if(clients.length !== names.length) {
+                        clients[names.length].send(JSON.stringify(errorPacket));
+                    } 
                 }
             }
             console.log("name: " + incPacket.data);
             break;
         case 'playerWord':
             //handle player's word
+            let processedData = processData(message.toString());
+            // console.log("message: " + message);
+            // console.log("debug: " + processedData);
+            // console.log("clients: " + clients.length);
+            // console.log("dataClients: " + clients)
+        
+         
+            // send the processed data back to all clients
+            let pointIndex = -1;
+            for(let i = 0; i < clients.length; i++) {
+                if(clients.uid == ws.uid) {
+                    pointIndex = i;
+                    break;
+               
+                } 
+            }
+            if(pointIndex > -1) {
+                let namesPacketResponse = { type : "points", data : processedData };
+                clients[pointIndex].send(JSON.stringify(namesPacketResponse));
+        
+                for(let i = 0; i < clients.length; i++) {
+                    if(i != pointIndex) {
+                        let namesPacketResponse = { type : "other", data : processedData, data2: pointIndex };
+                        clients[i].send(JSON.stringify(namesPacketResponse));
+                    }
+                }
+            }
+        
             console.log("playerWord: " + incPacket.data);
             break;
         
@@ -80,17 +111,6 @@ wss.on('connection', (ws) => {
             break;
     }
 
-    let processedData = processData(message.toString());
-    // console.log("message: " + message);
-    // console.log("debug: " + processedData);
-    // console.log("clients: " + clients.length);
-    // console.log("dataClients: " + clients)
-
- 
-    // send the processed data back to all clients
-    for(let i = 0; i < clients.length; i++) {
-      clients[i].send(processedData);
-    }
   });
 
   ws.on('close', () => {
@@ -115,6 +135,7 @@ wss.on('connection', (ws) => {
                     }
                 }
                 clients.splice(i, 1);
+                userWords.splice(i, 1);
             }
         }
     }

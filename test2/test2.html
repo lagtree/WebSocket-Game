@@ -43,8 +43,12 @@
         const incPacket = JSON.parse(event.data);
 
         switch (incPacket.type) {
-          case 'playerWord':
+          case 'points':
             //client processing of points returned
+            console.log(incPacket.data);
+            break;
+          case 'other':
+            console.log(incPacket.data + ", " + incPacket.data2)
             break;
           case 'error':
             console.log(incPacket.data + " :is Error");
