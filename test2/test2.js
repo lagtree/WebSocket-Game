@@ -7,7 +7,9 @@ import fetch from "node-fetch";
 
 const wss = new WebSocketServer({ port: 9091 });
 
-const clients = new Set();
+const clients = [];
+
+let names = [];
 
 var potential = [];
 
@@ -19,27 +21,91 @@ var openedText = await response.text(); // <-- changed
 var words = openedText.split(/\r\n|\n/);
 
 wss.on('connection', (ws) => {
-  clients.add(ws);
+    // ws.uid = clients.length
+    clients.push(ws);
 
   ws.on('message', (message) => {
-   // process the data received from the client
-    const paresedData = message.toString().split(" ");
-    console.log(paresedData);
-    // message = JSON.parse(message)
+    
+    const incPacket = JSON.parse(message);
+
+    switch (incPacket.type) {
+        case 'name':
+            if (names.length == 0) {
+                names.push(incPacket.data)
+                for (let i = 0; i < clients.length; i++) {
+                    const namePacketReturn = { type: 'name', data: incPacket.data}
+                    clients[i].send(JSON.stringify(namePacketReturn));
+                }
+            }else {
+                let nameUsed = false;
+                for(let i = 0; i < names.length; i++) {
+                    if (names[i] == incPacket.data) {
+                        nameUsed = true;
+                        break;
+                    }
+                }
+                if (!nameUsed) {
+                    names.push(incPacket.data);
+                    clients[names.length-1].uid = incPacket.data;
+                    for (let i = 0; i < clients.length; i++) {
+                        const namePacketReturn = { type: 'name', data: incPacket.data}
+                        clients[i].send(JSON.stringify(namePacketReturn));
+                    }
+                }else{
+                    const errorPacket = { type : 'error', data: "Can't do that! (name already in use)" }
+                    clients[names.length].send(JSON.stringify(errorPacket));
+                }
+            }
+            console.log("name: " + incPacket.data);
+            break;
+        case 'playerWord':
+            //handle player's word
+            console.log("playerWord: " + incPacket.data);
+            break;
+        
+        // case 'retrieve':
+        //     var namesPacket = { type : "response", data : names };
+        //     clients[clients.length-1].send(JSON.stringify(namesPacket));
+        //     break;
+    }
+
     let processedData = processData(message.toString());
-    console.log("message: " + message);
-    console.log("debug: " + processedData);
-    console.log("clients: " + clients.size)
+    // console.log("message: " + message);
+    // console.log("debug: " + processedData);
+    // console.log("clients: " + clients.length);
+    // console.log("dataClients: " + clients)
 
  
     // send the processed data back to all clients
-    for (const client of clients) {
-      client.send(processedData);
+    for(let i = 0; i < clients.length; i++) {
+      clients[i].send(processedData);
     }
   });
 
   ws.on('close', () => {
-    clients.delete(ws);
+    // clients.delete(ws);
+    if (clients.length > 0) {
+        for(let i = clients.length - 1; i >= 0; i--) {
+            if (clients[i] == ws) {
+                const removeLeaderBoardName = JSON.stringify({ type : 'rmLeaderName', data : clients[i].uid});
+                console.log("clientuid: " + clients[i].uid);
+                for (let j = 0; j < clients.length; j++) {
+                    if (i != j) {
+                        clients[j].send((removeLeaderBoardName));
+                    }
+                }
+                for (let j = 0; j < names.length; j++) {
+                    console.log(clients[i].uid + " " + names[j]);
+                    if (clients[i].uid == names[j]) {
+                        // console.log(true);
+                        names.splice(j, 1);
+                        break;
+                    }
+                }
+                clients.splice(i, 1);
+            }
+        }
+    }
   });
 });
 
@@ -90,9 +156,9 @@ function firstWord() {
     let rand = Math.floor(Math.random()*potential.length);
     let w = potential[rand];
     answers = allAnagrams(w);
-    console.log(potential.length);
-    console.log('w: ' + w);
-    console.log('answers: ' + answers);
+    // console.log(potential.length);
+    // console.log('w: ' + w);
+    // console.log('answers: ' + answers);
 }
 
 function processData(word) {

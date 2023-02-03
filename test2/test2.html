@@ -18,19 +18,68 @@
       const nameInput = document.getElementById('name');
       const nameButton = document.getElementById('addName');
 
+      let myName = null;
+      let tempName = null;
+
+      let leaderBoardNames = [];
+
       sendButton.addEventListener('click', () => {
-        socket.send("data " + messageInput.value);
+        const wordPacket = { type: 'playerWord', data: messageInput.value };
+        socket.send(JSON.stringify(wordPacket));
         messageInput.value = '';
       });
 
       nameButton.addEventListener('click', () => {
-        socket.send("name " + nameButton.value);
+        const namePacket = { type: 'name', data: nameInput.value };
+        tempName = nameInput.value;
+        socket.send(JSON.stringify(namePacket));
         nameButton.value = '';
+        //after
+        //const newMessage = { type : "retrieve", data: null };
+        //socket.send(JSON.stringify(newMessage));
       })
 
       socket.onmessage = (event) => {
-        output.innerHTML += `<p>Received: ${event.data}</p>`;
+        const incPacket = JSON.parse(event.data);
+
+        switch (incPacket.type) {
+          case 'playerWord':
+            //client processing of points returned
+            break;
+          case 'error':
+            console.log(incPacket.data + " :is Error");
+            break;
+          case 'rmLeaderName':
+            if (incPacket.data) {
+              for(let i = 0; i < leaderBoardNames.length; i++) {
+                if (incPacket.data == leaderBoardNames[i]) {
+                  leaderBoardNames.splice(i, 1);
+                  break;
+                }
+                
+              }
+              console.log(leaderBoardNames)
+            }
+            break;
+          case 'name':
+            //client processing of name check
+            if (incPacket.data == tempName) {
+              myName = tempName;
+              tempName = null;
+            }
+            leaderBoardNames.push(incPacket.data);
+            console.log(leaderBoardNames);
+            break;
+
+          case 'response':
+            leaderBoardNames = incPacket.data;
+            break;
+        }
       };
+
+      function print(text) {
+        console.log(text)
+      }
     </script>
   </body>
 </html>
