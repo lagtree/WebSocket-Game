@@ -34,9 +34,9 @@
         tempName = nameInput.value;
         socket.send(JSON.stringify(namePacket));
         nameButton.value = '';
-        //after
-        //const newMessage = { type : "retrieve", data: null };
-        //socket.send(JSON.stringify(newMessage));
+        //sends a retrieve packet after that will grab all cilents data for leaderboard and connection list
+        const newMessage = { type : "retrieve", data: null };
+        socket.send(JSON.stringify(newMessage));
       })
 
       socket.onmessage = (event) => {
@@ -72,7 +72,13 @@
             break;
 
           case 'response':
-            leaderBoardNames = incPacket.data;
+            let arr = JSON.parse(incPacket.data);
+            console.log(arr);
+            for(let i = 0; i < arr.length; i++) {
+              if(leaderBoardNames[i] != arr[i]) {
+                leaderBoardNames.push(String(arr[i]));
+              }
+            }
             break;
         }
       };

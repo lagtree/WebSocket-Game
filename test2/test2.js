@@ -20,6 +20,17 @@ var response = await fetch('https://raw.githubusercontent.com/first20hours/googl
 var openedText = await response.text(); // <-- changed
 var words = openedText.split(/\r\n|\n/);
 
+
+let words = new Array(3);
+let numWords = [10, 20, 20];
+let timings = [20, 40, 40];
+let userWords = [];
+let possibleWords = [];
+
+for (let i = 0; i < words.length; i++) {
+    words[i] = new Array(numWords[i]);
+}
+
 wss.on('connection', (ws) => {
     // ws.uid = clients.length
     clients.push(ws);
@@ -63,10 +74,10 @@ wss.on('connection', (ws) => {
             console.log("playerWord: " + incPacket.data);
             break;
         
-        // case 'retrieve':
-        //     var namesPacket = { type : "response", data : names };
-        //     clients[clients.length-1].send(JSON.stringify(namesPacket));
-        //     break;
+        case 'retrieve':
+            let namesPacketResponse = { type : "response", data : JSON.stringify(names) };
+            clients[clients.length-1].send(JSON.stringify(namesPacketResponse));
+            break;
     }
 
     let processedData = processData(message.toString());
@@ -88,6 +99,7 @@ wss.on('connection', (ws) => {
         for(let i = clients.length - 1; i >= 0; i--) {
             if (clients[i] == ws) {
                 const removeLeaderBoardName = JSON.stringify({ type : 'rmLeaderName', data : clients[i].uid});
+                console.log(i);
                 console.log("clientuid: " + clients[i].uid);
                 for (let j = 0; j < clients.length; j++) {
                     if (i != j) {
