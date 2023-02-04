@@ -11,7 +11,10 @@
     <div id="output"></div>
 
     <script>
+      //initialized the WebSocket Connection between the client and the server. (Not a client to client connection)
       const socket = new WebSocket('ws://localhost:9091');
+
+      //Manages all input fields present to the client
       const messageInput = document.getElementById('message');
       const sendButton = document.getElementById('send');
       const output = document.getElementById('output');

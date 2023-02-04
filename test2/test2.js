@@ -1,3 +1,4 @@
+//This snippit allows for both Import and Const-Require to be used in the same doucment. Saves some hassle for future development
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 
@@ -5,21 +6,24 @@ import { WebSocketServer } from 'ws';
 
 import fetch from "node-fetch";
 
+//Creates a WebSocketServer that can be accessed by any client that is ready with the same address and port. While the connection is open, it is secured over the network to prevent clients from sending too much data.
 const wss = new WebSocketServer({ port: 9091 });
 
+//Array of all of the clients. Uses built in Uid's from WebSocketServer to manage the naming conventions server side.
 const clients = [];
 
+//Yet another Array of the clients. This is the list that is send to the client for Leaderboard functionality.
 let names = [];
 
+//Array for all potential words that could be used by the server to distinguish the points that the player can get.
 var potential = [];
 
 var answers = null;
 var pointsOut = null;
-
+//Handles a list of words (Gets filtered out later so no small words like "a" or "I" and be used).
 var response = await fetch('https://raw.githubusercontent.com/first20hours/google-10000-english/master/google-10000-english-usa-no-swears.txt');
 var openedText = await response.text(); // <-- changed
 var words = openedText.split(/\r\n|\n/);
-
 
 let roundWords = new Array(3);
 let numWords = [10, 20, 20];
@@ -33,14 +37,17 @@ for (let i = 0; i < roundWords.length; i++) {
 
 wss.on('connection', (ws) => {
     // ws.uid = clients.length
+    //Adds the connection between the player and the server to a list of Client Connections named "clients" .push() refrences adding an object to the end of an Array or Set.
     clients.push(ws);
     userWords.push([]);
 
   ws.on('message', (message) => {
-    
+    //incPacket is the preProcessed variable set for any packet sent by the client to the server. JSON.parse() is used to turn strings back into JSON readable text. This makes formatting much easier over a network.
     const incPacket = JSON.parse(message);
 
     switch (incPacket.type) {
+        //Refrences when a packet is of type "name" and runs specific actions only when its true.
+        //Client asks the server if its chosen name has been used before. If not, the server responds with the name and adds the name to the server's array. If it has been used before, it drops the response and sends an error to the client.
         case 'name':
             if (names.length == 0) {
                 names.push(incPacket.data)
@@ -72,13 +79,11 @@ wss.on('connection', (ws) => {
             }
             console.log("name: " + incPacket.data);
             break;
+        //Refrences when a packet is of type "playerWord" and runs specific actions only when its true.
+        //Client sends a word to the Server. The server will check if the word correlates with the predetermined word specified by the server. Will "throw" a number (points) or an error back to the client, and send the same plus the name of the client to all other clients to be used for client side processing.
         case 'playerWord':
             //handle player's word
             let processedData = processData(message.toString());
-            // console.log("message: " + message);
-            // console.log("debug: " + processedData);
-            // console.log("clients: " + clients.length);
-            // console.log("dataClients: " + clients)
         
          
             // send the processed data back to all clients
@@ -104,7 +109,8 @@ wss.on('connection', (ws) => {
         
             console.log("playerWord: " + incPacket.data);
             break;
-        
+        //Refrences when a packet is of type "retrieve" and runs specific actions only when its true.
+        //Client will ask for the full list of player names. This fixes an issue where new clients would not have the full list of players if the other players pushed their names before the new client joined. Now, every client is ensured that they have the right names list before a game can begin.
         case 'retrieve':
             let namesPacketResponse = { type : "response", data : JSON.stringify(names) };
             clients[clients.length-1].send(JSON.stringify(namesPacketResponse));
@@ -114,7 +120,7 @@ wss.on('connection', (ws) => {
   });
 
   ws.on('close', () => {
-    // clients.delete(ws);
+    //Will disconnect a clients websocket connection if the client force closes the page or browser.
     if (clients.length > 0) {
         for(let i = clients.length - 1; i >= 0; i--) {
             if (clients[i] == ws) {
@@ -143,16 +149,13 @@ wss.on('connection', (ws) => {
 });
 
 //read from file a list of words, save it in a list and and shuffle it (twice for good measure)
-
 for(var j = 0; j < words.length; j++) {
     if (words[j].length === 6) {
         potential.push(words[j]);
     }
 }
 
-
 function allAnagrams(word) {
-    
     var anaWord = word;
     
     var all = [];
@@ -185,15 +188,14 @@ function allAnagrams(word) {
     return all;
 }
 
+//Generates the first word of the random process. The Server will send a scrabled version of this word to the client, which will be used as the letters present on their screen.
 function firstWord() {
     let rand = Math.floor(Math.random()*potential.length);
     let w = potential[rand];
     answers = allAnagrams(w);
-    // console.log(potential.length);
-    // console.log('w: ' + w);
-    // console.log('answers: ' + answers);
 }
 
+//When the client sends a word back to the server, the server will pass the word through this function to check how many points the word is worth.
 function processData(word) {
     if(answers != null){
         var pointsOut = 0
@@ -206,4 +208,6 @@ function processData(word) {
     return pointsOut;
 }
 
+
+//Initializes the firstWord() function as soon as the server is started.
 firstWord();
